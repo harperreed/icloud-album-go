@@ -5,6 +5,7 @@ package icloudalbum
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 var (
@@ -26,7 +27,7 @@ func charToBase62(r rune) (uint32, error) {
 }
 
 func calculatePartition(token string) (uint32, error) {
-	if token == "" {
+	if token == "" || strings.TrimSpace(token) == "" {
 		return 0, ErrEmptyToken
 	}
 	r := []rune(token)[0]

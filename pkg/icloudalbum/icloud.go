@@ -4,7 +4,12 @@ package icloudalbum
 
 import (
 	"net/http"
+	"time"
 )
+
+var defaultClient = &http.Client{
+	Timeout: 30 * time.Second,
+}
 
 // GetICloudPhotos orchestrates:
 // 1) base URL from token
@@ -13,7 +18,11 @@ import (
 // 4) webasseturls URLs
 // 5) enrichment of derivatives with URLs
 func GetICloudPhotos(token string) (*ICloudResponse, error) {
-	client := &http.Client{}
+	return GetICloudPhotosWithClient(token, defaultClient)
+}
+
+// GetICloudPhotosWithClient allows using a custom HTTP client for advanced use cases.
+func GetICloudPhotosWithClient(token string, client *http.Client) (*ICloudResponse, error) {
 
 	base, err := GetBaseURL(token)
 	if err != nil {

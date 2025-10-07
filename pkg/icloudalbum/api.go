@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"math/rand"
+	"math/rand/v2"
 	"net/http"
 	"time"
 )
@@ -150,7 +150,7 @@ func nextDelay(cfg RetryConfig, attempt int) time.Duration {
 		if max <= 0 {
 			return 0
 		}
-		return time.Duration(rand.Int63n(max.Milliseconds()+1)) * time.Millisecond
+		return time.Duration(rand.Int64N(max.Milliseconds()+1)) * time.Millisecond
 	default:
 		return cfg.BaseDelay
 	}
@@ -198,15 +198,16 @@ func GetAssetURLs(client *http.Client, baseURL string, photoGUIDs []string, cfg 
 			attempt++
 			continue
 		}
-		defer resp.Body.Close()
 
 		// Special handling: 400 → known Apple quirk; continue with empty map (parity with Rust)
 		if resp.StatusCode == 400 {
+			resp.Body.Close()
 			log.Printf("warn: webasseturls returned 400; returning empty map for partial functionality")
 			return map[string]string{}, nil
 		}
 
 		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			resp.Body.Close()
 			if shouldRetryStatus(c, resp.StatusCode) && attempt < c.MaxRetries {
 				time.Sleep(nextDelay(c, attempt))
 				attempt++
@@ -223,8 +224,11 @@ func GetAssetURLs(client *http.Client, baseURL string, photoGUIDs []string, cfg 
 			} `json:"items"`
 		}
 		if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
+			resp.Body.Close()
 			return nil, err
 		}
+		resp.Body.Close()
+
 		res := make(map[string]string, len(parsed.Items))
 		for id, it := range parsed.Items {
 			if it.URLLocation == "" || it.URLPath == "" {

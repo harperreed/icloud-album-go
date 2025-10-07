@@ -8,14 +8,23 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 	"unicode/utf8"
 )
+
+var downloadClient = &http.Client{
+	Timeout: 5 * time.Minute, // Longer timeout for large photo downloads
+}
 
 // DownloadPhoto downloads the best derivative and writes it to outputDir.
 // If customFilename (without extension) is given, it is used; otherwise we
 // compose a name from GUID, caption (sanitized), and optional index.
 func DownloadPhoto(photo *Image, index *int, outputDir string, customFilename *string) (string, error) {
-	client := &http.Client{}
+	return DownloadPhotoWithClient(photo, index, outputDir, customFilename, downloadClient)
+}
+
+// DownloadPhotoWithClient allows using a custom HTTP client for downloads.
+func DownloadPhotoWithClient(photo *Image, index *int, outputDir string, customFilename *string, client *http.Client) (string, error) {
 
 	key, _, url, ok := SelectBestDerivative(photo.Derivatives)
 	if !ok || url == "" {
