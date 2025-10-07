@@ -1,0 +1,75 @@
+# ABOUTME: GitHub Actions workflow for building and releasing CLI binaries
+# ABOUTME: Triggered on version tags, builds multi-platform binaries and creates releases
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Run tests
+        run: go test -v ./pkg/...
+
+      - name: Build binaries
+        run: |
+          # Linux AMD64
+          GOOS=linux GOARCH=amd64 go build -o bin/album-info-linux-amd64 -ldflags="-s -w" ./cmd/album-info
+          GOOS=linux GOARCH=amd64 go build -o bin/fetch-album-linux-amd64 -ldflags="-s -w" ./cmd/fetch-album
+          GOOS=linux GOARCH=amd64 go build -o bin/download-photos-linux-amd64 -ldflags="-s -w" ./cmd/download-photos
+
+          # Linux ARM64
+          GOOS=linux GOARCH=arm64 go build -o bin/album-info-linux-arm64 -ldflags="-s -w" ./cmd/album-info
+          GOOS=linux GOARCH=arm64 go build -o bin/fetch-album-linux-arm64 -ldflags="-s -w" ./cmd/fetch-album
+          GOOS=linux GOARCH=arm64 go build -o bin/download-photos-linux-arm64 -ldflags="-s -w" ./cmd/download-photos
+
+          # macOS AMD64
+          GOOS=darwin GOARCH=amd64 go build -o bin/album-info-darwin-amd64 -ldflags="-s -w" ./cmd/album-info
+          GOOS=darwin GOARCH=amd64 go build -o bin/fetch-album-darwin-amd64 -ldflags="-s -w" ./cmd/fetch-album
+          GOOS=darwin GOARCH=amd64 go build -o bin/download-photos-darwin-amd64 -ldflags="-s -w" ./cmd/download-photos
+
+          # macOS ARM64 (Apple Silicon)
+          GOOS=darwin GOARCH=arm64 go build -o bin/album-info-darwin-arm64 -ldflags="-s -w" ./cmd/album-info
+          GOOS=darwin GOARCH=arm64 go build -o bin/fetch-album-darwin-arm64 -ldflags="-s -w" ./cmd/fetch-album
+          GOOS=darwin GOARCH=arm64 go build -o bin/download-photos-darwin-arm64 -ldflags="-s -w" ./cmd/download-photos
+
+          # Windows AMD64
+          GOOS=windows GOARCH=amd64 go build -o bin/album-info-windows-amd64.exe -ldflags="-s -w" ./cmd/album-info
+          GOOS=windows GOARCH=amd64 go build -o bin/fetch-album-windows-amd64.exe -ldflags="-s -w" ./cmd/fetch-album
+          GOOS=windows GOARCH=amd64 go build -o bin/download-photos-windows-amd64.exe -ldflags="-s -w" ./cmd/download-photos
+
+          # Create checksums
+          cd bin
+          sha256sum * > checksums.txt
+          cd ..
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            bin/album-info-*
+            bin/fetch-album-*
+            bin/download-photos-*
+            bin/checksums.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

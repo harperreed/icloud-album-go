@@ -87,6 +87,50 @@ Run all tests:
 go test ./pkg/icloudalbum/... -v
 ```
 
+## Development
+
+### Pre-commit Hooks
+
+This project uses pre-commit hooks to ensure code quality. Install them with:
+
+```bash
+# Install pre-commit (if not already installed)
+pip install pre-commit
+# or: brew install pre-commit
+
+# Install the git hook scripts
+pre-commit install
+
+# (Optional) Run against all files
+pre-commit run --all-files
+```
+
+The hooks will automatically run:
+- `go fmt` - Format code
+- `go vet` - Check for suspicious constructs
+- `goimports` - Organize imports
+- `go test` - Run unit tests
+- `go mod tidy` - Keep dependencies clean
+
+For comprehensive linting, `golangci-lint` runs in GitHub Actions CI.
+
+### Releases
+
+Releases are automated via GitHub Actions. To create a new release:
+
+1. Tag a new version:
+   ```bash
+   git tag -a v1.0.0 -m "Release v1.0.0"
+   git push origin v1.0.0
+   ```
+
+2. GitHub Actions will automatically:
+   - Run all tests
+   - Build binaries for Linux (amd64, arm64), macOS (amd64, arm64), and Windows (amd64)
+   - Create a GitHub release with binaries and checksums
+
+Download pre-built binaries from the [Releases](https://github.com/harperreed/icloud-album-go/releases) page.
+
 ## Project Structure
 
 ```

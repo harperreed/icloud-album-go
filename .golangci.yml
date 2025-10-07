@@ -1,0 +1,39 @@
+# ABOUTME: golangci-lint configuration for Go code quality and style checks
+# ABOUTME: Configures linters for catching bugs, style issues, and performance problems
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - gofmt
+    - goimports
+    - misspell
+    - gocritic
+    - revive
+    - unparam
+
+linters-settings:
+  errcheck:
+    check-blank: true
+    check-type-assertions: true
+  govet:
+    check-shadowing: true
+  gofmt:
+    simplify: true
+  revive:
+    rules:
+      - name: exported
+        disabled: false
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+run:
+  timeout: 5m
+  tests: true
